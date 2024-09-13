@@ -8,11 +8,10 @@ from great_expectations.compatibility.typing_extensions import override
 
 logger = logging.getLogger(__name__)
 
-from great_expectations.core.run_identifier import RunIdentifier
 from great_expectations.render.renderer.renderer import Renderer
 
 if TYPE_CHECKING:
-    from great_expectations.checkpoint.checkpoint import CheckpointResult
+    from great_expectations.core import RunIdentifier
     from great_expectations.core.expectation_validation_result import (
         ExpectationSuiteValidationResult,
     )

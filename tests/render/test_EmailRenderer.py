@@ -1,6 +1,7 @@
+import textwrap
+
 import pytest
 
-import textwrap
 from great_expectations.core.expectation_validation_result import (
     ExpectationSuiteValidationResult,
     ExpectationSuiteValidationResultMeta,
@@ -74,7 +75,6 @@ def test_EmailRenderer_render(v1_checkpoint_result):
         <p><strong>Batch ID</strong>: None</p>
         <p><strong>Summary</strong>: <strong>3</strong> of <strong>3</strong> expectations were met</p>"""
         )
-    
     assert data_docs_block == str(
                         '<p><strong>DataDocs</strong> can be found here: <a href="file:///localsite/index.html">file:///localsite/index.html</a>.</br>'
                         '(Please copy and paste link into a browser to view)</p>',
