@@ -29,7 +29,7 @@ class EmailRenderer(Renderer):
         validation_result_urls = validation_result_urls or []
 
         text_blocks: list[str] = []
-        description_block = self._render_validation_result(result=validation_result)
+        description_block = self._build_description_block(result=validation_result)
         text_blocks.append(description_block)
 
         report_element_block = self._build_report_element_block(validation_result_urls)
@@ -38,7 +38,7 @@ class EmailRenderer(Renderer):
 
         return text_blocks
 
-    def _render_validation_result(
+    def _build_description_block(
         self, result: ExpectationSuiteValidationResult
     ) -> str:
         suite_name = result.suite_name
