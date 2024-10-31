@@ -54,16 +54,16 @@
                 "type": "object"
             }
         },
+        "windows": {
+            "title": "Windows",
+            "description": "Definition(s) for evaluation of temporal windows",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/Window"
+            }
+        },
         "batch_id": {
             "title": "Batch Id",
-            "type": "string"
-        },
-        "row_condition": {
-            "title": "Row Condition",
-            "type": "string"
-        },
-        "condition_parser": {
-            "title": "Condition Parser",
             "type": "string"
         },
         "column": {
@@ -71,6 +71,13 @@
             "description": "The column name.",
             "minLength": 1,
             "type": "string"
+        },
+        "row_condition": {
+            "title": "Row Condition",
+            "type": "string"
+        },
+        "condition_parser": {
+            "$ref": "#/definitions/ConditionParser"
         },
         "min_value": {
             "title": "Min Value",
@@ -81,6 +88,10 @@
                 },
                 {
                     "type": "object"
+                },
+                {
+                    "type": "string",
+                    "format": "date"
                 },
                 {
                     "type": "string",
@@ -97,6 +108,10 @@
                 },
                 {
                     "type": "object"
+                },
+                {
+                    "type": "string",
+                    "format": "date"
                 },
                 {
                     "type": "string",
@@ -195,6 +210,66 @@
                 "BASIC",
                 "COMPLETE",
                 "SUMMARY"
+            ],
+            "type": "string"
+        },
+        "Offset": {
+            "title": "Offset",
+            "description": "A threshold in which a metric will be considered passable",
+            "type": "object",
+            "properties": {
+                "positive": {
+                    "title": "Positive",
+                    "type": "number"
+                },
+                "negative": {
+                    "title": "Negative",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "positive",
+                "negative"
+            ],
+            "additionalProperties": false
+        },
+        "Window": {
+            "title": "Window",
+            "description": "A definition for a temporal window across <`range`> number of previous invocations",
+            "type": "object",
+            "properties": {
+                "constraint_fn": {
+                    "title": "Constraint Fn",
+                    "type": "string"
+                },
+                "parameter_name": {
+                    "title": "Parameter Name",
+                    "type": "string"
+                },
+                "range": {
+                    "title": "Range",
+                    "type": "integer"
+                },
+                "offset": {
+                    "$ref": "#/definitions/Offset"
+                }
+            },
+            "required": [
+                "constraint_fn",
+                "parameter_name",
+                "range",
+                "offset"
+            ],
+            "additionalProperties": false
+        },
+        "ConditionParser": {
+            "title": "ConditionParser",
+            "description": "Type of parser to be used to interpret a Row Condition.",
+            "enum": [
+                "great_expectations",
+                "great_expectations__experimental__",
+                "pandas",
+                "spark"
             ],
             "type": "string"
         }

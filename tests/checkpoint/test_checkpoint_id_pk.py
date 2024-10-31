@@ -87,7 +87,8 @@ def expect_column_values_to_be_in_set() -> gxe.ExpectColumnValuesToBeInSet:
 @pytest.fixture
 def expect_column_values_to_not_be_in_set() -> gxe.ExpectColumnValuesToNotBeInSet:
     return gxe.ExpectColumnValuesToNotBeInSet(
-        column="animals", value_set=["giraffe", "lion", "zebra"]
+        column="animals",
+        value_set=["giraffe", "lion", "zebra"],
     )
 
 
@@ -111,7 +112,7 @@ def _build_checkpoint_and_run(
         suite=ExpectationSuite(name="metrics_exp", expectations=expectations)
     )
 
-    ds = context.get_datasource("my_datasource")
+    ds = context.data_sources.get("my_datasource")
     assert isinstance(ds, Datasource)
     asset = ds.get_asset(asset_name)
     batch_definition = asset.add_batch_definition(name="my_batch_def")

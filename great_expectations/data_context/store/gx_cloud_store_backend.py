@@ -427,7 +427,7 @@ class GXCloudStoreBackend(StoreBackend, metaclass=ABCMeta):
 
     @property
     def ge_cloud_resource_type(self) -> GXCloudRESTResource:
-        return self._ge_cloud_resource_type  # type: ignore[return-value]
+        return self._ge_cloud_resource_type
 
     @property
     def ge_cloud_credentials(self) -> dict:
@@ -467,7 +467,7 @@ class GXCloudStoreBackend(StoreBackend, metaclass=ABCMeta):
             ) from e
 
     @override
-    def get_url_for_key(  # type: ignore[override]
+    def get_url_for_key(
         self,
         key: Tuple[GXCloudRESTResource, str | None, str | None],
         protocol: Optional[Any] = None,

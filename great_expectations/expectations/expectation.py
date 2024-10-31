@@ -62,10 +62,11 @@ from great_expectations.expectations.model_field_descriptions import (
     COLUMN_B_DESCRIPTION,
     COLUMN_DESCRIPTION,
     COLUMN_LIST_DESCRIPTION,
-    MOSTLY_DESCRIPTION,
+    WINDOWS_DESCRIPTION,
 )
-from great_expectations.expectations.model_field_types import (  # noqa: TCH001  # types needed for pydantic deser
-    Mostly,
+from great_expectations.expectations.model_field_types import (
+    ConditionParser,
+    MostlyField,
 )
 from great_expectations.expectations.registry import (
     get_metric_kwargs,
@@ -75,6 +76,7 @@ from great_expectations.expectations.registry import (
 from great_expectations.expectations.sql_tokens_and_types import (
     valid_sql_tokens_and_types,
 )
+from great_expectations.expectations.window import Window
 from great_expectations.render import (
     AtomicDiagnosticRendererType,
     AtomicPrescriptiveRendererType,
@@ -293,6 +295,7 @@ class Expectation(pydantic.BaseModel, metaclass=MetaExpectation):
 
         @staticmethod
         def schema_extra(schema: Dict[str, Any], model: Type[Expectation]) -> None:
+            # Add metadata to the schema
             schema["properties"]["metadata"] = {
                 "type": "object",
                 "properties": {
@@ -308,6 +311,14 @@ class Expectation(pydantic.BaseModel, metaclass=MetaExpectation):
                     },
                 },
             }
+
+            # Add extra fields to schema from custom schema_overrides
+            # schema_overrides is not a pydantic concept, but pydantic.Field allows
+            # us to pass through arbitrary fields.
+            for prop in schema["properties"].values():
+                if overrides := prop.pop("schema_overrides", None):
+                    assert isinstance(overrides, dict)
+                    prop.update(overrides)
 
     id: Union[str, None] = None
     meta: Union[dict, None] = None
@@ -330,19 +341,37 @@ class Expectation(pydantic.BaseModel, metaclass=MetaExpectation):
     args_keys: ClassVar[Tuple[str, ...]] = ()
 
     expectation_type: ClassVar[str]
+    windows: Optional[List[Window]] = pydantic.Field(default=None, description=WINDOWS_DESCRIPTION)
     examples: ClassVar[List[dict]] = []
 
     _save_callback: Union[Callable[[Expectation], Expectation], None] = pydantic.PrivateAttr(
         default=None
     )
 
+    def __lt__(self, other: object) -> bool:
+        # Enables sorting of Expectations
+        if not isinstance(other, Expectation):
+            return False
+
+        if self.expectation_type != other.expectation_type:
+            return self.expectation_type < other.expectation_type
+
+        if self.id and other.id:
+            return self.id < other.id
+
+        return False
+
     @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Expectation):
             return False
 
-        self_dict = self.dict()
-        other_dict = other.dict()
+        # rendered_content is derived from the rest of the expectation, and can/should
+        # be excluded from equality checks
+        exclude: set[str] = {"rendered_content"}
+
+        self_dict = self.dict(exclude=exclude)
+        other_dict = other.dict(exclude=exclude)
 
         # Simplify notes and meta equality - falsiness is equivalent
         for attr in ("notes", "meta"):
@@ -1523,14 +1552,10 @@ class BatchExpectation(Expectation, ABC):
     """  # noqa: E501
 
     batch_id: Union[str, None] = None
-    row_condition: Union[str, None] = None
-    condition_parser: Union[str, None] = None
 
     domain_keys: ClassVar[Tuple[str, ...]] = (
         "batch_id",
         "table",
-        "row_condition",
-        "condition_parser",
     )
     metric_dependencies: ClassVar[Tuple[str, ...]] = ()
     domain_type: ClassVar[MetricDomainTypes] = MetricDomainTypes.TABLE
@@ -1684,11 +1709,7 @@ class QueryExpectation(BatchExpectation, ABC):
         - https://docs.greatexpectations.io/docs/guides/expectations/creating_custom_expectations/how_to_create_custom_query_expectations
     """  # noqa: E501
 
-    domain_keys: ClassVar[Tuple] = (
-        "batch_id",
-        "row_condition",
-        "condition_parser",
-    )
+    domain_keys: ClassVar[Tuple] = ("batch_id",)
 
     @override
     def validate_configuration(
@@ -1701,16 +1722,13 @@ class QueryExpectation(BatchExpectation, ABC):
 
         Raises:
               InvalidExpectationConfigurationError: If no `query` is specified
-              UserWarning: If query is not parameterized, and/or row_condition is passed.
+              UserWarning: If query is not parameterized
         """
         super().validate_configuration(configuration=configuration)
         if not configuration:
             configuration = self.configuration
 
         query: Optional[Any] = configuration.kwargs.get("query") or self._get_default_value("query")
-        row_condition: Optional[Any] = configuration.kwargs.get(
-            "row_condition"
-        ) or self._get_default_value("row_condition")
 
         try:
             assert (
@@ -1738,13 +1756,6 @@ class QueryExpectation(BatchExpectation, ABC):
             )
         except (TypeError, AssertionError) as e:
             warnings.warn(str(e), UserWarning)
-        try:
-            assert row_condition is None, (
-                "`row_condition` is an experimental feature. "
-                "Combining this functionality with QueryExpectations may result in unexpected behavior."  # noqa: E501
-            )
-        except AssertionError as e:
-            warnings.warn(str(e), UserWarning)
 
 
 class ColumnAggregateExpectation(BatchExpectation, ABC):
@@ -1769,6 +1780,8 @@ class ColumnAggregateExpectation(BatchExpectation, ABC):
     """  # noqa: E501
 
     column: StrictStr = Field(min_length=1, description=COLUMN_DESCRIPTION)
+    row_condition: Union[str, None] = None
+    condition_parser: Union[ConditionParser, None] = None
 
     domain_keys: ClassVar[Tuple[str, ...]] = (
         "batch_id",
@@ -1819,7 +1832,9 @@ class ColumnMapExpectation(BatchExpectation, ABC):
     """  # noqa: E501
 
     column: StrictStr = Field(min_length=1, description=COLUMN_DESCRIPTION)
-    mostly: Mostly = 1.0
+    mostly: MostlyField = 1
+    row_condition: Union[str, None] = None
+    condition_parser: Union[ConditionParser, None] = None
 
     catch_exceptions: bool = True
 
@@ -2085,7 +2100,9 @@ class ColumnPairMapExpectation(BatchExpectation, ABC):
 
     column_A: StrictStr = Field(min_length=1, description=COLUMN_A_DESCRIPTION)
     column_B: StrictStr = Field(min_length=1, description=COLUMN_B_DESCRIPTION)
-    mostly: Mostly = 1.0
+    mostly: MostlyField = 1
+    row_condition: Union[str, None] = None
+    condition_parser: Union[ConditionParser, None] = None
 
     catch_exceptions: bool = True
 
@@ -2339,8 +2356,9 @@ class MulticolumnMapExpectation(BatchExpectation, ABC):
     """  # noqa: E501
 
     column_list: List[StrictStr] = pydantic.Field(description=COLUMN_LIST_DESCRIPTION)
-    mostly: Mostly = pydantic.Field(default=1.0, description=MOSTLY_DESCRIPTION)
-
+    mostly: MostlyField = 1
+    row_condition: Union[str, None] = None
+    condition_parser: Union[ConditionParser, None] = None
     ignore_row_if: Literal["all_values_are_missing", "any_value_is_missing", "never"] = (
         "all_values_are_missing"
     )

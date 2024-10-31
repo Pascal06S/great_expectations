@@ -208,7 +208,7 @@ class SphinxInvokeDocsBuilder:
         Returns:
             Content suitable for use in a docusaurus mdx file.
         """
-        from bs4 import (  # noqa: I001
+        from bs4 import (
             BeautifulSoup,
         )  # Importing here since it is not a library requirement
 
@@ -279,15 +279,14 @@ class SphinxInvokeDocsBuilder:
             else:
                 link_sidebar_entry = self._get_sidebar_entry(html_file_path=href_path)
 
-            relative_link = self._relative_path_between_documents(
-                sidebar_entry.mdx_relpath, link_sidebar_entry.mdx_relpath
-            )
+            relative_link = link_sidebar_entry.mdx_relpath
+
             without_extension = str(relative_link).replace(".mdx", "")
             if not without_extension.endswith("_class"):
                 raise Exception(  # noqa: TRY002, TRY003
                     f"Expected class mdx file path to end with _class; this could indicate a method link that will break: {without_extension}"
                 )
-            internal_ref["href"] = str(without_extension)
+            internal_ref["href"] = "/docs/reference/api/" + str(without_extension)
 
         doc_str = str(doc)
 

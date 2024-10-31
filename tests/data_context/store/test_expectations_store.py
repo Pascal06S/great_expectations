@@ -6,6 +6,7 @@ import pytest
 
 import great_expectations.expectations as gxe
 from great_expectations.core.expectation_suite import ExpectationSuite
+from great_expectations.data_context.data_context.cloud_data_context import CloudDataContext
 from great_expectations.data_context.store import ExpectationsStore
 from great_expectations.data_context.types.resource_identifiers import (
     ExpectationSuiteIdentifier,
@@ -345,6 +346,21 @@ def _test_add_expectation_disregards_provided_id(context):
     assert added_expectation.id != provided_id
 
 
+@pytest.mark.filesystem
+def test_add_adds_ids_to_suite_and_expectations(empty_data_context):
+    context = empty_data_context
+
+    expectation_a = gxe.ExpectColumnValuesToBeInSet(column="a", value_set=[1, 2, 3])
+    expectation_b = gxe.ExpectColumnMaxToBeBetween(column="b", min_value=0, max_value=10)
+    suite = ExpectationSuite("test-suite", expectations=[expectation_a, expectation_b])
+
+    assert all(obj.id is None for obj in (expectation_a, expectation_b, suite))
+
+    suite = context.suites.add(suite)
+
+    assert all(obj.id is not None for obj in (expectation_a, expectation_b, suite))
+
+
 @pytest.mark.cloud
 def test_update_expectation_success_cloud_backend(empty_cloud_data_context):
     context = empty_cloud_data_context
@@ -494,6 +510,8 @@ def _test_delete_expectation_raises_error_for_missing_expectation(context):
     # Assert
     updated_suite_dict = store.get(key=store.get_key(name=suite.name, id=suite.id))
     updated_suite = ExpectationSuite(**updated_suite_dict)
+    if isinstance(context, CloudDataContext):
+        updated_suite.render()
     assert suite == updated_suite
     assert len(updated_suite.expectations) == 1
 

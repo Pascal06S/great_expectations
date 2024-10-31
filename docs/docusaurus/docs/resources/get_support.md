@@ -26,7 +26,7 @@ The order in which we are prioritizing support issues are as follows:
 
 **Your support question will be answered more quickly if you post in Discourse than if you post in Slack.** The reason: Discourse allows for better organization and searchability of support topics.
 
-For specific details on what is GX-supported (in either GX Core or GX Cloud), community-supported or not supported, you can reference our [integration and support policy](https://docs.greatexpectations.io/docs/application_integration_support/). For areas not covered by GX support, we encourage community-driven assistance. 
+For specific details on what is GX-supported (in either GX Core or GX Cloud), community-supported or not supported, you can reference our [integration and support policy](https://docs.greatexpectations.io/docs/application_integration_support/). For areas not covered by GX support, we encourage community-driven assistance. Check out the [GX Core Issues Board](https://github.com/orgs/great-expectations/projects/2?pane=info) for the latest status on GitHub Issues. 
 
 ## How to effectively get support
 
@@ -36,7 +36,7 @@ The following are some recommendations for resolving issues on your own. Resolvi
 
 Search the docs you're using currently for an answer to your issue or question.
 
-If you're new to GX Cloud, review [About GX Cloud](/cloud/about_gx.md).
+If you're new to GX Cloud, review the [GX Cloud overview](/cloud/overview/gx_cloud_overview.md).
 
 If you're new to GX Core, see the [Introduction to GX Core](/core/introduction/introduction.mdx).
 

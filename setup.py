@@ -8,7 +8,7 @@ from setuptools import find_packages, setup
 
 import versioneer
 
-SUPPORTED_PYTHON = ">=3.8,<3.12"
+SUPPORTED_PYTHON = ">=3.9,<3.13"
 
 
 def get_python_requires() -> str:
@@ -17,7 +17,7 @@ def get_python_requires() -> str:
     return a version with no upper-bound.
     """
     if os.getenv("GX_PYTHON_EXPERIMENTAL"):
-        return ">=3.8"
+        return ">=3.9"
     return SUPPORTED_PYTHON
 
 
@@ -122,7 +122,7 @@ config = {
     "include_package_data": True,
     "python_requires": get_python_requires(),
     "classifiers": [
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
         "Intended Audience :: Other Audience",
@@ -131,7 +131,6 @@ config = {
         "Topic :: Software Development :: Testing",
         "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",

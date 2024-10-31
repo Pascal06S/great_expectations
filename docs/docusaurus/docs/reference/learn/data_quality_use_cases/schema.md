@@ -6,7 +6,7 @@ title: 'Validate data schema with GX'
 import TabItem from '@theme/TabItem';
 import Tabs from '@theme/Tabs';
 
-**Data schema** refers to the structural blueprint of a dataset, encompassing elements such as column
+Data schema refers to the structural blueprint of a dataset, encompassing elements such as column
 names, data types, and the overall organization of information. When working with data, ensuring
 that it adheres to its predefined schema is a critical aspect of data quality management. This
 process, known as schema validation, is among the top priority use cases for data quality platforms.
@@ -17,7 +17,7 @@ established rules, such as verifying column names, data types, and the presence 
 Schema changes, whether planned or unexpected, can significantly impact data integrity and the
 performance of data-dependent systems.
 
-Great Expectations (GX) provides a powerful suite of schema-focused **Expectations** that allow you
+Great Expectations (GX) provides a powerful suite of schema-focused Expectations that allow you
 to define and enforce the structural integrity of your datasets. These tools enable you to establish
 robust schema validation within your data pipelines, helping to catch and address schema-related
 issues before they propagate through your data ecosystem. This guide will walk you through
@@ -168,15 +168,15 @@ Gallery](https://greatexpectations.io/expectations/expect_table_column_count_to_
 :::tip[GX tips for table-level Expectations]
 - Implement `ExpectColumnToExist` early in your data pipeline to catch missing columns as soon as possible, minimizing downstream errors and rework.
 - Periodically review and update `ExpectTableColumnCountToEqual` Expectation alongside any schema changes, especially when new regulatory requirements emerge.
-- Use `ExpectTableColumnsToMatchOrderedList` over `ExpectTableColumnsToMatchSet` when order matters, such as in scripts directly referencing column positions.
+- Use `ExpectTableColumnsToMatchOrderedList` instead of `ExpectTableColumnsToMatchSet` when order matters, such as in scripts directly referencing column positions.
 - Opt for `ExpectTableColumnsToMatchSet` when integrating datasets from various sources where column order might differ, but consistency in available data is required.
 - Regularly review the allowed range in `ExpectTableColumnCountToBeBetween` as your dataset evolves, ensuring it aligns with business requirements and anticipates potential future expansion.
 :::
 
 
-## Examples and scenarios
+## Examples
 
-**GX Cloud** provides a visual interface to create and run schema validation workflows. The GX Cloud workflow to validate data schema is intuitive and straightforward: create a Data Asset, define an Expectation Suite, run a Checkpoint, and review Validation Results.
+**GX Cloud** provides a visual interface to create and run schema validation workflows. The GX Cloud workflow for validating data schema is to create a Data Asset, define an Expectation Suite, run a Checkpoint, and review Validation Results.
 
 ![Validate schema Expectations in GX Cloud](./schema_resources/gx_cloud_schema_expectations_validate.gif)
 

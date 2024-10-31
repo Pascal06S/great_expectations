@@ -5,10 +5,6 @@ from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, Type, Uni
 import altair as alt
 import pandas as pd
 
-from great_expectations.compatibility import pydantic
-from great_expectations.core.suite_parameters import (
-    SuiteParameterDict,  # noqa: TCH001  # used in pydantic validation
-)
 from great_expectations.expectations.expectation import (
     ColumnAggregateExpectation,
     render_suite_parameter_string,
@@ -18,7 +14,7 @@ from great_expectations.expectations.model_field_descriptions import (
     VALUE_SET_DESCRIPTION,
 )
 from great_expectations.expectations.model_field_types import (
-    ValueSet,  # noqa: TCH001  # type needed in pydantic validation
+    ValueSetField,  # noqa: TCH001  # type needed in pydantic validation
 )
 from great_expectations.render import (
     LegacyDescriptiveRendererType,
@@ -197,9 +193,7 @@ class ExpectColumnDistinctValuesToBeInSet(ColumnAggregateExpectation):
                 }}
     """  # noqa: E501
 
-    value_set: Union[Optional[ValueSet], SuiteParameterDict] = pydantic.Field(
-        description=VALUE_SET_DESCRIPTION,
-    )
+    value_set: ValueSetField
 
     library_metadata: ClassVar[Dict[str, Union[str, list, bool]]] = {
         "maturity": "production",
@@ -385,8 +379,7 @@ class ExpectColumnDistinctValuesToBeInSet(ColumnAggregateExpectation):
             return None
         else:
             chart_pixel_width = (len(values) / 60.0) * 500
-            if chart_pixel_width < 250:  # noqa: PLR2004
-                chart_pixel_width = 250
+            chart_pixel_width = max(chart_pixel_width, 250)
             chart_container_col_width = round((len(values) / 60.0) * 6)
             if chart_container_col_width < 4:  # noqa: PLR2004
                 chart_container_col_width = 4
