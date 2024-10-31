@@ -53,14 +53,14 @@ def test_EmailRenderer_render(v1_checkpoint_result):
         results=[],
         suite_name="my_suite",
     )
-    data_docs_pages = {"local_site": "file:///localsite/index.html"}
+    data_docs_pages = {"local_site": "file://localsite/index.html"}
 
     email_renderer = EmailRenderer()
 
     html_blocks = email_renderer.render(
         validation_result=validation_result,
         data_docs_pages=data_docs_pages,
-        validation_result_urls=["file:///localsite/index.html"],
+        validation_result_urls=["file://localsite/index.html"],
     )
 
     overview_block = html_blocks[0]
@@ -83,7 +83,7 @@ def test_EmailRenderer_render(v1_checkpoint_result):
         <p><strong>Summary</strong>: {summary}</p>"""
     )
     assert data_docs_block == (
-        """<p><strong>DataDocs</strong> can be found here: <a href="file:/localsite/index.html">"""
-        + "file:/localsite/index.html</a>.</br>"
+        """<p><strong>DataDocs</strong> can be found here: <a href="file://localsite/index.html">"""
+        + "file://localsite/index.html</a>.</br>"
         + "(Please copy and paste link into a browser to view)</p>"
     )

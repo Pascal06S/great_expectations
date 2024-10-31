@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import pathlib
 import textwrap
 import urllib
 from typing import TYPE_CHECKING
@@ -102,6 +101,6 @@ class EmailRenderer(Renderer):
 
     def _build_report_element_block(self, validation_result_urls: list[str]) -> str | None:
         for url in validation_result_urls:
-            fixed_url = pathlib.Path(urllib.parse.unquote(url)).as_posix()
+            fixed_url = urllib.parse.unquote(url)
             report_element = self._get_report_element(fixed_url)
             return report_element
