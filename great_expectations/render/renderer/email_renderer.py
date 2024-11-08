@@ -5,14 +5,13 @@ import textwrap
 import urllib
 from typing import TYPE_CHECKING
 
-from great_expectations.compatibility.typing_extensions import override
-
 logger = logging.getLogger(__name__)
 
+from great_expectations.compatibility.typing_extensions import override
 from great_expectations.render.renderer.renderer import Renderer
 
 if TYPE_CHECKING:
-    from great_expectations.core import RunIdentifier
+    from great_expectations.checkpoint.checkpoint import CheckpointResult
     from great_expectations.core.expectation_validation_result import (
         ExpectationSuiteValidationResult,
     )
@@ -25,22 +24,29 @@ class EmailRenderer(Renderer):
     @override
     def render(
         self,
-        validation_result: ExpectationSuiteValidationResult,
+        checkpoint_result: CheckpointResult,
         data_docs_pages: dict[ValidationResultIdentifier, dict[str, str]] | None = None,
-        validation_result_urls: list[str] | None = None,
     ) -> tuple[str, str]:
         data_docs_pages = data_docs_pages or {}
-        validation_result_urls = validation_result_urls or []
+        blocks: list[str] = []
 
-        text_blocks: list[str] = []
-        description_block = self._build_description_block(result=validation_result)
-        text_blocks.append(description_block)
+        for (
+            validation_result_identifier,
+            validation_result,
+        ) in checkpoint_result.run_results.items():
+            description_block = self._build_description_block(validation_result)
 
-        report_element_block = self._build_report_element_block(validation_result_urls)
-        if report_element_block:
-            text_blocks.append(report_element_block)
+            data_docs_page = data_docs_pages.get(validation_result_identifier, {})
+            data_docs_link_block = self._build_data_docs_link_block(data_docs_page)
+            if data_docs_link_block:
+                description_block += "\n" + data_docs_link_block
 
-        return text_blocks
+            blocks.append(description_block)
+
+        status = "Success ✅" if checkpoint_result.success else "Failed ❌"
+        title = f"{checkpoint_result.name} - {status}"
+
+        return title, self._concatenate_blocks(blocks)
 
     def _build_description_block(self, result: ExpectationSuiteValidationResult) -> str:
         suite_name = result.suite_name
@@ -52,8 +58,10 @@ class EmailRenderer(Renderer):
         check_details_text = f"<strong>{n_checks_succeeded}</strong> of <strong>{n_checks}</strong> expectations were met"  # noqa: E501
         status = "Success ✅" if result.success else "Failed ❌"
 
+        title = f"<h3><u>{suite_name}</u></h3>"
         html = textwrap.dedent(
             f"""\
+            <p><strong>{title}</strong></p>
             <p><strong>Batch Validation Status</strong>: {status}</p>
             <p><strong>Expectation Suite Name</strong>: {suite_name}</p>
             <p><strong>Data Asset Name</strong>: {asset_name}</p>
@@ -64,22 +72,14 @@ class EmailRenderer(Renderer):
 
         return html
 
-    def concatenate_blocks(
-        self,
-        action_name: str,
-        text_blocks: list[dict],
-        success: bool,
-        checkpoint_name: str,
-        run_id: RunIdentifier,
-    ) -> str:
-        status = "Success ✅" if success else "Failed ❌"
-        title = f"{action_name} - {checkpoint_name} - {status}"
-        return title, "<br>".join(text_blocks)
+    def _concatenate_blocks(self, text_blocks: list[str]) -> str:
+        return "\n<br>".join(text_blocks)
 
     def _get_report_element(self, docs_link: str) -> str | None:
         report_element = None
         if docs_link:
             try:
+                docs_link = urllib.parse.unquote(docs_link)
                 if "file:/" in docs_link:
                     # handle special case since the email does not render these links
                     report_element = str(
@@ -94,13 +94,18 @@ class EmailRenderer(Renderer):
                     link used to generate the docs link is: {docs_link} and is of type: {type(docs_link)}.
                     Error: {e}"""  # noqa: E501
                 )
-                return
         else:
             logger.warning("No docs link found. Skipping data docs link in the email message.")
         return report_element
 
-    def _build_report_element_block(self, validation_result_urls: list[str]) -> str | None:
-        for url in validation_result_urls:
-            fixed_url = urllib.parse.unquote(url)
-            report_element = self._get_report_element(fixed_url)
-            return report_element
+    def _build_data_docs_link_block(self, data_docs_page: dict[str, str]) -> str:
+        docs_link_blocks: list[str] = []
+        for docs_link_key, docs_link in data_docs_page.items():
+            if docs_link_key == "class":
+                continue
+
+            report_element = self._get_report_element(docs_link)
+            if report_element:
+                docs_link_blocks.append(report_element)
+
+        return "\n".join(docs_link_blocks)
