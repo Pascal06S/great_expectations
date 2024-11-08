@@ -565,7 +565,7 @@ class OpsgenieAlertAction(ValidationAction):
 
 
 @public_api
-class EmailAction(DataDocsAction):
+class EmailAction(ValidationAction):
     """Sends an email to a given list of email addresses.
 
     ```yaml
